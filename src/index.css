@@ -388,7 +388,15 @@ a {
   .grid-2 { grid-template-columns: 1fr; }
   .grid-3 { grid-template-columns: 1fr; }
   .timeline-line { left: 20px; }
-  .blob { opacity: 0.2; }
+  .blob { opacity: 0.12; filter: blur(36px) !important; }
+  /* Lightweight backdrop-filter on mobile for 60 FPS smooth scrolling */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  div, header, nav, section, footer {
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+  }
 }
 
 /* Small Mobile Breakpoint */

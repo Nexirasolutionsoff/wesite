@@ -10,7 +10,8 @@ export default function LiquidGlassCanvas({ className = '' }) {
     let raf;
     let tick = 0;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches);
+    const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
 
     const resize = () => {
       const parent = canvas.parentElement || document.body;
@@ -35,7 +36,6 @@ export default function LiquidGlassCanvas({ className = '' }) {
       const nx = e.clientX - rect.left;
       const ny = e.clientY - rect.top;
 
-      // Calculate speed for particle spawning
       const dx = nx - mouse.x;
       const dy = ny - mouse.y;
       mouse.speed = Math.sqrt(dx * dx + dy * dy);
@@ -44,16 +44,16 @@ export default function LiquidGlassCanvas({ className = '' }) {
       mouse.y = ny;
       mouse.active = true;
 
-      // Spawn trail sparkles when cursor moves
-      if (mouse.speed > 2 && Math.random() < 0.65) {
+      // Spawn trail sparkles when cursor moves (disabled or throttled on mobile)
+      if (!isMobile && mouse.speed > 2 && Math.random() < 0.5) {
         trailParticles.push({
           x: nx + (Math.random() - 0.5) * 12,
           y: ny + (Math.random() - 0.5) * 12,
           vx: (Math.random() - 0.5) * 1.5 - dx * 0.05,
           vy: (Math.random() - 0.5) * 1.5 - dy * 0.05 - 0.5,
-          r: Math.random() * 5 + 2.5,
+          r: Math.random() * 4 + 2,
           life: 1,
-          decay: Math.random() * 0.02 + 0.015,
+          decay: Math.random() * 0.02 + 0.02,
           ci: Math.floor(Math.random() * colors.length)
         });
       }
@@ -75,23 +75,26 @@ export default function LiquidGlassCanvas({ className = '' }) {
       { r: 236, g: 72, b: 153 }   // Electric Pink (#EC4899)
     ];
 
-    // Main Floating Billing Orbs
-    const orbs = [
-      { xr: 0.18, yr: 0.25, r: 150, sx: 0.5, sy: 0.35, c1: 0, c2: 2, curX: 0, curY: 0 }, // Emerald-Cyan
-      { xr: 0.8, yr: 0.4, r: 170, sx: -0.4, sy: 0.45, c1: 1, c2: 0, curX: 0, curY: 0 },  // Indigo-Emerald
-      { xr: 0.45, yr: 0.78, r: 140, sx: 0.45, sy: -0.3, c1: 2, c2: 3, curX: 0, curY: 0 }, // Cyan-Amber
-      { xr: 0.85, yr: 0.82, r: 120, sx: -0.55, sy: -0.45, c1: 3, c2: 1, curX: 0, curY: 0 } // Amber-Indigo
+    // Main Floating Billing Orbs (Fewer orbs on mobile)
+    const orbs = isMobile ? [
+      { xr: 0.2, yr: 0.25, r: 90, sx: 0.4, sy: 0.3, c1: 0, c2: 2, curX: 0, curY: 0 },
+      { xr: 0.75, yr: 0.75, r: 100, sx: -0.4, sy: -0.3, c1: 1, c2: 0, curX: 0, curY: 0 }
+    ] : [
+      { xr: 0.18, yr: 0.25, r: 150, sx: 0.5, sy: 0.35, c1: 0, c2: 2, curX: 0, curY: 0 },
+      { xr: 0.8, yr: 0.4, r: 170, sx: -0.4, sy: 0.45, c1: 1, c2: 0, curX: 0, curY: 0 },
+      { xr: 0.45, yr: 0.78, r: 140, sx: 0.45, sy: -0.3, c1: 2, c2: 3, curX: 0, curY: 0 },
+      { xr: 0.85, yr: 0.82, r: 120, sx: -0.55, sy: -0.45, c1: 3, c2: 1, curX: 0, curY: 0 }
     ];
 
-    // Background Constellation / Ledger Node Particles
-    const N = 45;
+    // Background Constellation Nodes (Reduced count for mobile GPUs)
+    const N = isMobile ? 14 : 40;
     const particles = Array.from({ length: N }, () => ({
       x: Math.random() * (window.innerWidth || 1200),
       y: Math.random() * (window.innerHeight || 800),
-      br: Math.random() * 3.5 + 1.5,
+      br: Math.random() * 3 + 1.5,
       r: 0,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
       ci: Math.floor(Math.random() * colors.length),
       a: Math.random() * 0.4 + 0.2,
       ps: Math.random() * 0.02 + 0.008,
@@ -99,18 +102,18 @@ export default function LiquidGlassCanvas({ className = '' }) {
     }));
 
     // Floating Billing Currency & Invoice Symbols
-    const billingSymbolsList = ['₹', '$', '%', 'GST', 'INV', '↗', '₹', 'SOC2', '₹', '%', '₹', 'TAX'];
-    const floatingSymbols = Array.from({ length: 22 }, () => ({
+    const billingSymbolsList = ['₹', '$', '%', 'GST', 'INV', '↗', '₹', 'TAX'];
+    const floatingSymbols = Array.from({ length: isMobile ? 8 : 20 }, () => ({
       x: Math.random() * (window.innerWidth || 1200),
       y: Math.random() * (window.innerHeight || 800),
       symbol: billingSymbolsList[Math.floor(Math.random() * billingSymbolsList.length)],
-      fontSize: Math.floor(Math.random() * 8) + 12,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
+      fontSize: Math.floor(Math.random() * 6) + 12,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
       rot: (Math.random() - 0.5) * 0.4,
       rotSpeed: (Math.random() - 0.5) * 0.008,
       ci: Math.floor(Math.random() * colors.length),
-      a: Math.random() * 0.22 + 0.08,
+      a: Math.random() * 0.2 + 0.08,
       ps: Math.random() * 0.015 + 0.005,
       po: Math.random() * Math.PI * 2
     }));
@@ -124,59 +127,48 @@ export default function LiquidGlassCanvas({ className = '' }) {
       const H = h();
       ctx.clearRect(0, 0, W, H);
 
-      // 1. DYNAMIC CURSOR LIGHT GLOW (BILLING ACCENT)
-      if (mouse.active) {
-        const glowG = ctx.createRadialGradient(mouse.x, mouse.y, 10, mouse.x, mouse.y, 280);
-        glowG.addColorStop(0, 'rgba(16, 185, 129, 0.14)');  // Emerald glow
-        glowG.addColorStop(0.35, 'rgba(99, 102, 241, 0.08)'); // Indigo
-        glowG.addColorStop(0.7, 'rgba(6, 182, 212, 0.04)');  // Cyan
+      // 1. DYNAMIC CURSOR LIGHT GLOW
+      if (mouse.active && !isMobile) {
+        const glowG = ctx.createRadialGradient(mouse.x, mouse.y, 10, mouse.x, mouse.y, 240);
+        glowG.addColorStop(0, 'rgba(16, 185, 129, 0.12)');
+        glowG.addColorStop(0.35, 'rgba(99, 102, 241, 0.06)');
         glowG.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = glowG;
         ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 280, 0, Math.PI * 2);
+        ctx.arc(mouse.x, mouse.y, 240, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // 2. ORBS WITH CURSOR GRAVITY REPULSION
+      // 2. ORBS
       orbs.forEach((o) => {
-        const targetX = o.xr * W + Math.sin(tick * o.sx + o.r) * 50;
-        const targetY = o.yr * H + Math.cos(tick * o.sy + o.r) * 40;
+        const targetX = o.xr * W + Math.sin(tick * o.sx + o.r) * (isMobile ? 25 : 50);
+        const targetY = o.yr * H + Math.cos(tick * o.sy + o.r) * (isMobile ? 20 : 40);
 
-        // Smooth follow
         o.curX += (targetX - o.curX) * 0.05;
         o.curY += (targetY - o.curY) * 0.05;
-
-        // Mouse repulsion
-        const dx = mouse.x - o.curX;
-        const dy = mouse.y - o.curY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 220 && dist > 0) {
-          const force = (220 - dist) / 220;
-          o.curX -= (dx / dist) * force * 15;
-          o.curY -= (dy / dist) * force * 15;
-        }
 
         const c1 = colors[o.c1];
         const c2 = colors[o.c2];
 
         const g = ctx.createRadialGradient(o.curX - o.r * 0.3, o.curY - o.r * 0.3, o.r * 0.05, o.curX, o.curY, o.r);
         g.addColorStop(0, `rgba(255,255,255,0.85)`);
-        g.addColorStop(0.3, `rgba(${c1.r},${c1.g},${c1.b},0.55)`);
-        g.addColorStop(0.75, `rgba(${c2.r},${c2.g},${c2.b},0.35)`);
+        g.addColorStop(0.3, `rgba(${c1.r},${c1.g},${c1.b},0.45)`);
+        g.addColorStop(0.85, `rgba(${c2.r},${c2.g},${c2.b},0.25)`);
         g.addColorStop(1, `rgba(255,255,255,0)`);
 
         ctx.save();
         ctx.beginPath();
         ctx.arc(o.curX, o.curY, o.r, 0, Math.PI * 2);
         ctx.fillStyle = g;
-        ctx.shadowColor = `rgba(${c1.r},${c1.g},${c1.b},0.25)`;
-        ctx.shadowBlur = 30;
-        ctx.fill();
-
+        // Disable shadowBlur on mobile GPUs for 60 FPS performance
+        if (!isMobile) {
+          ctx.shadowColor = `rgba(${c1.r},${c1.g},${c1.b},0.2)`;
+          ctx.shadowBlur = 24;
+        }
         // Specular highlight
         ctx.beginPath();
         ctx.ellipse(o.curX - o.r * 0.3, o.curY - o.r * 0.35, o.r * 0.22, o.r * 0.12, -0.6, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.fill();
         ctx.restore();
       });
